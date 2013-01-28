@@ -723,8 +723,6 @@ prompt_command_function() {
                 rc="$rc_color$rc$colors_reset$bell "
         fi
 
-        endExecution
-
         cwd=${PWD/$HOME/\~}                     # substitute  "~"
         set_shell_label "${cwd##[/~]*/}/"       # default label - path last dir
 
@@ -740,7 +738,7 @@ prompt_command_function() {
         # else eval cwd_cmd,  cwd should have path after exection
         eval "${cwd_cmd/\\/cwd=\\\\}"
 
-        PS1="$color_who_where$yellow[$(secondsToHms command_execution_time)] $dir_color$cwd$tail_local$dir_color $head_local\n$colors_reset$rc$prompt_char $colors_reset"
+        PS1="$color_who_where $dir_color$cwd$tail_local$dir_color $head_local\n$colors_reset$rc$prompt_char $colors_reset"
 
         unset head_local tail_local pwd
  }
@@ -748,8 +746,6 @@ prompt_command_function() {
         PROMPT_COMMAND=prompt_command_function
 
         enable_set_shell_label
-
-        trap 'startExecution' DEBUG
 
         unset rc id tty modified_files file_list
 

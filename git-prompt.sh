@@ -26,6 +26,7 @@
         error_bell=${error_bell:-off}
         cwd_cmd=${cwd_cmd:-\\w}
 
+        notify_long_commands_after=${notify_long_commands_after:-10}
 
         #### dir, rc, root color
         cols=`tput colors`                              # in emacs shell-mode tput colors returns -1
@@ -679,6 +680,38 @@ j (){
 
 alias jumpstart='echo ${aj_dir_list[@]}'
 
+###################################################################### COMMAND EXECUTITION TIME
+
+function secondsToHms ()
+{
+    local _S=${1}
+    local H=$((${_S}/3600))
+    local M=$((${_S}%3600/60))
+    local S=$((${_S}%60))
+
+    local OUT=''
+    if [ $H -gt 0 ]; then OUT="${OUT}${H}:"; fi
+    OUT="${OUT}${M}:${S}"
+
+    echo ${OUT}
+}
+
+function startExecution ()
+{
+    command=`history 1 | sed -e "s/^[ ]*[0-9]*[ ]*//g"`
+    command_start_time=${command_start_time:-$SECONDS}
+}
+
+function endExecution ()
+{
+    command_execution_time=$(($SECONDS - $command_start_time))
+    unset command_start_time
+
+    if [ ${command_execution_time} -gt ${notify_long_commands_after} ]; then
+        notify-send "Terminal" "Execution \"${command}\" finished in ${command_execution_time} seconds"
+    fi
+}
+
 ###################################################################### PROMPT_COMMAND
 
 prompt_command_function() {
@@ -693,7 +726,7 @@ prompt_command_function() {
         cwd=${PWD/$HOME/\~}                     # substitute  "~"
         set_shell_label "${cwd##[/~]*/}/"       # default label - path last dir
 
-	parse_virtualenv_status
+        parse_virtualenv_status
         parse_vcs_status
 
         # autojump
@@ -705,7 +738,7 @@ prompt_command_function() {
         # else eval cwd_cmd,  cwd should have path after exection
         eval "${cwd_cmd/\\/cwd=\\\\}"
 
-        PS1="$colors_reset$rc$head_local$color_who_where$dir_color$cwd$tail_local$dir_color$prompt_char $colors_reset"
+        PS1="$color_who_where $dir_color$cwd$tail_local$dir_color $head_local\n$colors_reset$rc$prompt_char $colors_reset"
 
         unset head_local tail_local pwd
  }
